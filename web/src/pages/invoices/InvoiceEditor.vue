@@ -183,8 +183,8 @@ onMounted(async () => {
     }
   }
 
-  // Load clients (for dropdown)
-  const cl = await clientsApi.list({ archived: false })
+  // Load clients (for dropdown) — per_page=200 (API max), bez něj default=50 ořezával seznam
+  const cl = await clientsApi.list({ archived: false, per_page: 200 })
   clients.value = cl.data
 
   if (isEdit.value && invoiceId.value) {
