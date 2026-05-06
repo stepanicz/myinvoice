@@ -1,8 +1,11 @@
 import { api } from './client'
 
+export type BankStatementSource = 'gpc' | 'email'
+
 export interface BankStatement {
   id: number
   file_name: string
+  source: BankStatementSource
   account_number: string
   statement_date: string
   statement_number: string | null

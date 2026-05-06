@@ -31,6 +31,7 @@ export interface Supplier {
   pohoda_centre_code: string | null
   pohoda_activity_code: string | null
   pohoda_contract_code: string | null
+  payment_email_alias: string | null
 }
 
 export interface CurrencyAccount {

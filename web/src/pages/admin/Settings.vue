@@ -100,6 +100,16 @@ async function addCurrencyAccount(code: string) {
   }
 }
 
+async function copyAlias() {
+  if (!supplier.value?.payment_email_alias) return
+  try {
+    await navigator.clipboard.writeText(supplier.value.payment_email_alias)
+    toast.success(t('settings.payment_email_copied'))
+  } catch {
+    toast.error(t('common.error'))
+  }
+}
+
 async function removeCurrency(c: CurrencyAccount) {
   if (!window.confirm(t('settings.delete_account_confirm', { label: c.label }))) return
   try {
@@ -199,6 +209,23 @@ async function removeCurrency(c: CurrencyAccount) {
               {{ t('settings.auto_send_reminders') }}
             </label>
             <p class="text-xs text-neutral-500 mt-1 ml-6">{{ t('settings.auto_send_reminders_hint') }}</p>
+          </div>
+        </div>
+
+        <!-- Párování plateb e-mailem — read-only alias (CUSTOM stepanicz) -->
+        <div v-if="supplier.payment_email_alias" class="mt-6 pt-4 border-t border-neutral-200">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">{{ t('settings.payment_email_section') }}</h3>
+          <p class="text-xs text-neutral-500 mb-3">{{ t('settings.payment_email_hint') }}</p>
+          <div>
+            <label class="block text-xs font-medium text-neutral-700 mb-1">{{ t('settings.payment_email_alias') }}</label>
+            <div class="flex gap-2">
+              <input :value="supplier.payment_email_alias" type="text" readonly
+                class="flex-1 h-9 px-3 border border-neutral-300 bg-neutral-50 rounded-md text-sm font-mono select-all" />
+              <button type="button" @click="copyAlias"
+                class="cursor-pointer h-9 px-3 text-xs border border-neutral-300 rounded-md hover:bg-neutral-50 inline-flex items-center gap-1">
+                {{ t('settings.payment_email_copy') }}
+              </button>
+            </div>
           </div>
         </div>
 

@@ -22,6 +22,10 @@
 # Bank scan každých 30 min (FIO export přijde kdykoliv během dne)
 */30 *    *    *    *    php /var/www/html/api/bin/cron-bank-scan.php
 
+# Mail scan každých 5 min — IMAP schránka s bankovními notifikacemi
+# (CSAS posílá v reálném čase při každé přijaté platbě)
+*/5  *    *    *    *    php /var/www/html/api/bin/cron-mail-scan.php
+
 # Upomínky klientům (Po–Pá)
 0    9    *    *    1-5  php /var/www/html/api/bin/cron-send-reminders.php
 0    11   *    *    1-5  php /var/www/html/api/bin/cron-send-approval-reminders.php

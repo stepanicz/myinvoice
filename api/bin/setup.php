@@ -191,11 +191,12 @@ try {
     $stmt = $pdo->prepare(
         'INSERT INTO supplier (company_name, display_name, street, city, zip, country_id, ic, dic,
                                is_vat_payer, email, phone, web, default_currency_id, default_vat_rate_id,
-                               default_payment_due_days, default_hourly_rate)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 7, 1500.00)'
+                               default_payment_due_days, default_hourly_rate, payment_email_alias)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 7, 1500.00, ?)'
     );
     // FK check off jen pro tento INSERT (supplier.default_currency_id=0 dočasně)
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+    $aliasGen = new \MyInvoice\Service\Supplier\PaymentAliasGenerator($config);
     $stmt->execute([
         $supplier['company_name'],
         $supplier['display_name'] ?: null,
@@ -210,6 +211,7 @@ try {
         $supplier['phone'] ?: null,
         $supplier['web'] ?: null,
         $vatRateId,
+        $aliasGen->generateUnique($pdo),
     ]);
     $supplierId = (int) $pdo->lastInsertId();
 

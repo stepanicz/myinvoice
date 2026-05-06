@@ -154,7 +154,7 @@ final class BankStatementAction
         // normalizované hodnoty (REGEXP_REPLACE non-digits + TRIM leading zeros).
         $sid = SupplierGuard::currentId($request);
         $stmt = $this->db->pdo()->prepare(
-            "SELECT bs.id, bs.file_name, bs.account_number, bs.statement_date, bs.statement_number,
+            "SELECT bs.id, bs.file_name, bs.source, bs.account_number, bs.statement_date, bs.statement_number,
                     bs.prev_balance, bs.curr_balance, bs.transaction_count, bs.matched_count, bs.imported_at
                FROM bank_statements bs
               WHERE EXISTS (

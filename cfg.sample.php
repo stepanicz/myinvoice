@@ -222,6 +222,26 @@ return [
         'partial_match_tolerance' => 1.00,           // částečná shoda částky: 1.00 = jen přesně, 0.99 = ±1%, 0.0 = jakákoliv částka
     ],
 
+    // CUSTOM (stepanicz): párování plateb z bankovních notifikačních mailů.
+    // Každý supplier má alias `payment-<hex>@<alias_domain>`. Aliasy směřují
+    // doménovým aliasem hostingu do jediné IMAP schránky. Cron fetchuje
+    // UNSEEN, podle Delivered-To rozliší dodavatele a per-bank parser
+    // vytáhne částku/VS/účty. IMAP credentials patří do cfg.local.php.
+    'payment_email_scan' => [
+        'enabled'           => false,                       // true = cron-mail-scan aktivní
+        'alias_domain'      => 'uctostepanovi.cz',          // doména pro per-supplier aliasy
+        'imap_host'         => 'imap.svethostingu.cz',
+        'imap_port'         => 993,
+        'imap_encryption'   => 'ssl',                       // 'ssl' | 'tls' | ''
+        'imap_validate_cert'=> true,
+        'imap_user'         => '',                          // přepsat v cfg.local.php
+        'imap_pass'         => '',                          // přepsat v cfg.local.php
+        'inbox'             => 'INBOX',
+        'processed_folder'  => 'INBOX.Processed',           // úspěšně zpracované maily se přesunou sem
+        'error_folder'      => 'INBOX.Errors',              // maily s neznámou bankou / parse fail
+        'max_per_run'       => 50,                          // limit fetchnutých zpráv per cron tick
+    ],
+
     // Cron retention (api/bin/cron-cleanup.php + cron-backup.php)
     'cron' => [
         'cleanup' => [

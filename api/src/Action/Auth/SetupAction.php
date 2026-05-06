@@ -11,6 +11,7 @@ use MyInvoice\Service\ActivityLogger;
 use MyInvoice\Service\Auth\PasswordHasher;
 use MyInvoice\Service\Auth\SessionManager;
 use MyInvoice\Service\IpMatcher;
+use MyInvoice\Service\Supplier\PaymentAliasGenerator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -26,6 +27,7 @@ final class SetupAction
         private readonly IpMatcher $ipMatcher,
         private readonly SessionManager $sessions,
         private readonly Config $config,
+        private readonly PaymentAliasGenerator $aliasGen,
     ) {}
 
     public function __invoke(Request $request, Response $response): Response
@@ -141,8 +143,9 @@ final class SetupAction
         $stmt = $pdo->prepare(
             'INSERT INTO supplier
             (company_name, display_name, street, city, zip, country_id, ic, dic, is_vat_payer,
-             email, phone, web, default_currency_id, default_vat_rate_id, default_payment_due_days, default_hourly_rate)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)'
+             email, phone, web, default_currency_id, default_vat_rate_id, default_payment_due_days, default_hourly_rate,
+             payment_email_alias)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)'
         );
         $stmt->execute([
             (string) ($supplier['company_name'] ?? ''),
@@ -160,6 +163,7 @@ final class SetupAction
             $vatRateId,
             (int) ($supplier['default_payment_due_days'] ?? 7),
             (string) ($supplier['default_hourly_rate'] ?? '1500.00'),
+            $this->aliasGen->generateUnique($pdo),
         ]);
         $supplierId = (int) $pdo->lastInsertId();
 

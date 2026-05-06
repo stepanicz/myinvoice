@@ -11,6 +11,7 @@ use MyInvoice\Middleware\SupplierScopeMiddleware;
 use MyInvoice\Service\ActivityLogger;
 use MyInvoice\Service\IpMatcher;
 use MyInvoice\Service\Pdf\InvoicePdfRenderer;
+use MyInvoice\Service\Supplier\PaymentAliasGenerator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -34,6 +35,7 @@ final class SettingsAction
         private readonly ActivityLogger $logger,
         private readonly IpMatcher $ipMatcher,
         private readonly InvoicePdfRenderer $pdf,
+        private readonly PaymentAliasGenerator $aliasGen,
     ) {}
 
     /** Aktuální supplier (z X-Supplier-Id middleware). */
@@ -115,8 +117,8 @@ final class SettingsAction
                 'INSERT INTO supplier (company_name, display_name, street, city, zip, country_id,
                                        ic, dic, is_vat_payer, email, phone, web, tagline,
                                        default_currency_id, default_vat_rate_id,
-                                       default_payment_due_days, default_hourly_rate)
-                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                                       default_payment_due_days, default_hourly_rate, payment_email_alias)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
             );
             $stmt->execute([
                 (string) $b['company_name'],
@@ -136,6 +138,7 @@ final class SettingsAction
                 $defaultVatId ?: 1,
                 (int) ($b['default_payment_due_days'] ?? 14),
                 (float) ($b['default_hourly_rate'] ?? 1500.00),
+                $this->aliasGen->generateUnique($pdo),
             ]);
             $newSupplierId = (int) $pdo->lastInsertId();
 

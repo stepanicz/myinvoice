@@ -115,7 +115,13 @@ async function onFileSelected(e: Event) {
           <tr v-for="s in statements" :key="s.id" @click="router.push(`/bank/${s.id}`)" class="cursor-pointer hover:bg-neutral-50">
             <td class="px-3 py-2 text-xs">{{ formatDate(s.statement_date) }}<span v-if="s.statement_number" class="text-neutral-400 ml-1">#{{ s.statement_number }}</span></td>
             <td class="px-3 py-2 font-mono text-xs">{{ s.account_number }}</td>
-            <td class="px-3 py-2 text-xs text-neutral-600 truncate max-w-xs">{{ s.file_name }}</td>
+            <td class="px-3 py-2 text-xs text-neutral-600 truncate max-w-xs">
+              <span class="inline-block text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded mr-1.5 align-middle"
+                :class="s.source === 'email' ? 'bg-primary-50 text-primary-700' : 'bg-neutral-100 text-neutral-600'">
+                {{ s.source === 'email' ? 'E-mail' : 'GPC' }}
+              </span>
+              {{ s.file_name }}
+            </td>
             <td class="px-3 py-2 text-right font-mono text-xs">{{ formatMoney(s.curr_balance, 'CZK') }}</td>
             <td class="px-3 py-2 text-center">{{ s.transaction_count }}</td>
             <td class="px-3 py-2 text-center">
@@ -141,7 +147,13 @@ async function onFileSelected(e: Event) {
             <div class="font-mono text-sm font-semibold whitespace-nowrap">{{ formatMoney(s.curr_balance, 'CZK') }}</div>
           </div>
           <div class="font-mono text-xs text-neutral-500 mt-0.5">{{ s.account_number }}</div>
-          <div class="text-xs text-neutral-500 truncate mt-0.5">{{ s.file_name }}</div>
+          <div class="text-xs text-neutral-500 truncate mt-0.5">
+            <span class="inline-block text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded mr-1.5 align-middle"
+              :class="s.source === 'email' ? 'bg-primary-50 text-primary-700' : 'bg-neutral-100 text-neutral-600'">
+              {{ s.source === 'email' ? 'E-mail' : 'GPC' }}
+            </span>
+            {{ s.file_name }}
+          </div>
           <div class="flex items-baseline justify-between gap-2 mt-2">
             <span class="text-xs text-neutral-500">{{ s.transaction_count }} transakcí</span>
             <span class="text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap"
