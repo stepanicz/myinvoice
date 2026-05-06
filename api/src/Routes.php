@@ -235,6 +235,7 @@ final class Routes
         $app->delete('/api/recurring-invoices/{id:[0-9]+}',        [RecurringTemplateAction::class, 'delete']);
         $app->post  ('/api/recurring-invoices/{id:[0-9]+}/pause',  [RecurringTemplateAction::class, 'pause']);
         $app->post  ('/api/recurring-invoices/{id:[0-9]+}/resume', [RecurringTemplateAction::class, 'resume']);
+        $app->post  ('/api/recurring-invoices/{id:[0-9]+}/clone',  [RecurringTemplateAction::class, 'clone']);
         $app->post  ('/api/recurring-invoices/{id:[0-9]+}/run-now',[RecurringTemplateAction::class, 'runNow']);
 
         // 404 fallback pro /api/*

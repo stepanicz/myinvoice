@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { recurringApi, type RecurringTemplate, type RecurringStatus } from '@/api/recurring'
 import { formatDate } from '@/composables/useFormat'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
+const router = useRouter()
 
 const items = ref<RecurringTemplate[]>([])
 const loading = ref(false)
@@ -65,6 +66,19 @@ async function runNow(id: number) {
     await load()
   } catch (e: any) {
     toast.error(e?.response?.data?.error?.message || 'Vystavení selhalo.')
+  } finally {
+    busyId.value = null
+  }
+}
+
+async function clone(id: number) {
+  busyId.value = id
+  try {
+    const newTpl = await recurringApi.clone(id)
+    toast.success(`Šablona zkopírována — otevírám "${newTpl.name}".`)
+    router.push(`/recurring/${newTpl.id}/edit`)
+  } catch (e: any) {
+    toast.error(e?.response?.data?.error?.message || 'Kopírování selhalo.')
   } finally {
     busyId.value = null
   }
@@ -215,6 +229,14 @@ onMounted(load)
                 class="text-xs px-2 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50"
               >
                 ▶ Aktivovat
+              </button>
+              <button
+                @click="clone(t.id)"
+                :disabled="busyId === t.id"
+                class="text-xs px-2 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                title="Vytvořit kopii"
+              >
+                ⧉ Kopírovat
               </button>
               <button
                 @click="remove(t.id, t.name)"

@@ -169,6 +169,56 @@ final class RecurringTemplateAction
         return Json::ok($response, $this->repo->find($id));
     }
 
+    public function clone(Request $request, Response $response, array $args): Response
+    {
+        $id = (int) $args['id'];
+        $src = $this->repo->find($id);
+        if (!SupplierGuard::owns($request, $src)) {
+            return Json::error($response, 'not_found', 'Šablona nenalezena.', 404);
+        }
+
+        $user = (array) $request->getAttribute(AuthMiddleware::ATTR_USER, []);
+        $userId = (int) ($user['id'] ?? 0);
+
+        // Kopie: přepíšeme jen jméno (+kopie) a resetujeme run history. Datum/frekvence/items zůstávají.
+        $payload = [
+            'name'             => $src['name'] . ' (kopie)',
+            'client_id'        => $src['client_id'],
+            'project_id'       => $src['project_id'],
+            'invoice_type'     => $src['invoice_type'],
+            'currency_id'      => $src['currency_id'],
+            'language'         => $src['language'],
+            'reverse_charge'   => $src['reverse_charge'],
+            'payment_due_days' => $src['payment_due_days'],
+            'note_above_items' => $src['note_above_items'],
+            'note_below_items' => $src['note_below_items'],
+            'frequency'        => $src['frequency'],
+            'start_date'       => $src['start_date'],
+            'end_date'         => $src['end_date'],
+            'next_run_date'    => $src['next_run_date'],
+            'status'           => 'active',
+            'auto_send'        => $src['auto_send'],
+        ];
+        $newId = $this->repo->create(SupplierGuard::currentId($request), $payload, $userId);
+
+        $items = array_map(static fn (array $it) => [
+            'description'            => $it['description'],
+            'quantity'               => $it['quantity'],
+            'unit'                   => $it['unit'],
+            'unit_price_without_vat' => $it['unit_price_without_vat'],
+            'vat_rate_id'            => $it['vat_rate_id'],
+            'order_index'            => $it['order_index'],
+        ], (array) ($src['items'] ?? []));
+        $this->repo->replaceItems($newId, $items);
+
+        $ip = $this->ipMatcher->clientIpFromRequest($request->getServerParams());
+        $this->logger->log('recurring.cloned', $userId, 'recurring_template', $id, [
+            'new_id' => $newId, 'name' => $payload['name'],
+        ], $ip, $request->getHeaderLine('User-Agent'));
+
+        return Json::ok($response, $this->repo->find($newId), 201);
+    }
+
     public function runNow(Request $request, Response $response, array $args): Response
     {
         $id = (int) $args['id'];

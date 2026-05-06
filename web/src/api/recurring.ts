@@ -102,6 +102,9 @@ export const recurringApi = {
   resume: (id: number) =>
     api.post<RecurringTemplate>(`/recurring-invoices/${id}/resume`).then((r) => r.data),
 
+  clone: (id: number) =>
+    api.post<RecurringTemplate>(`/recurring-invoices/${id}/clone`).then((r) => r.data),
+
   runNow: (id: number) =>
     api.post<RunNowResult>(`/recurring-invoices/${id}/run-now`).then((r) => r.data),
 }
