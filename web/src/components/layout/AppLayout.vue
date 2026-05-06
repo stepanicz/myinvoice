@@ -41,6 +41,8 @@ const navItems = computed<NavItem[]>(() => {
   const items: NavItem[] = [
     { to: '/',         label: t('nav.dashboard'),  icon: 'M3 12l9-9 9 9M5 10v10h14V10' },
     { to: '/invoices', label: t('nav.invoices'),   icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z' },
+    // CUSTOM (stepanicz): pravidelné faktury
+    { to: '/recurring', label: 'Pravidelné',       icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15' },
     { to: '/clients',  label: t('nav.clients'),    icon: 'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a3 3 0 0 1 5.356-1.857M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z' },
     { to: '/projects', label: t('nav.projects'),   icon: 'M3 7l9-4 9 4-9 4-9-4zM3 12l9 4 9-4M3 17l9 4 9-4' },
     { to: '/bank',     label: t('nav.bank'),       icon: 'M3 9l9-7 9 7m-2 0v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9m4 11V13h4v7' },

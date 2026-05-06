@@ -20,6 +20,10 @@ const routes: RouteRecordRaw[] = [
       { path: 'invoices/new',           name: 'invoice-new',    component: () => import('@/pages/invoices/InvoiceEditor.vue') },
       { path: 'invoices/:id(\\d+)',     name: 'invoice-detail', component: () => import('@/pages/invoices/InvoiceDetail.vue') },
       { path: 'invoices/:id(\\d+)/edit', name: 'invoice-edit',  component: () => import('@/pages/invoices/InvoiceEditor.vue') },
+      // CUSTOM (stepanicz): pravidelné faktury
+      { path: 'recurring',                name: 'recurring',        component: () => import('@/pages/recurring/RecurringList.vue') },
+      { path: 'recurring/new',            name: 'recurring-new',    component: () => import('@/pages/recurring/RecurringForm.vue') },
+      { path: 'recurring/:id(\\d+)/edit', name: 'recurring-edit',   component: () => import('@/pages/recurring/RecurringForm.vue') },
       { path: 'bank',                   name: 'bank-statements', component: () => import('@/pages/bank/StatementList.vue') },
       { path: 'bank/:id(\\d+)',         name: 'bank-detail',     component: () => import('@/pages/bank/StatementDetail.vue') },
       // Admin (M6)

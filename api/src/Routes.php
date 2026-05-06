@@ -60,6 +60,8 @@ use MyInvoice\Action\Project\GetProjectAction;
 use MyInvoice\Action\Project\ListProjectsAction;
 use MyInvoice\Action\Project\ProjectStatsAction;
 use MyInvoice\Action\Project\UpdateProjectAction;
+// CUSTOM (stepanicz): pravidelné faktury
+use MyInvoice\Action\Recurring\RecurringTemplateAction;
 use MyInvoice\Action\Auth\ForgotPasswordAction;
 use MyInvoice\Action\Auth\LoginAction;
 use MyInvoice\Action\Auth\LogoutAction;
@@ -222,6 +224,18 @@ final class Routes
         $app->post ('/api/bank-transactions/{id:[0-9]+}/match',   [BankStatementAction::class, 'manualMatch']);
         $app->post ('/api/bank-transactions/{id:[0-9]+}/unmatch', [BankStatementAction::class, 'unmatch']);
         $app->post ('/api/bank-transactions/{id:[0-9]+}/ignore',  [BankStatementAction::class, 'ignore']);
+
+        // ──────────────────────────────────────────────────────────────────
+        // CUSTOM (stepanicz): pravidelné faktury — nepřítomno v upstreamu
+        // ──────────────────────────────────────────────────────────────────
+        $app->get   ('/api/recurring-invoices',                    [RecurringTemplateAction::class, 'list']);
+        $app->post  ('/api/recurring-invoices',                    [RecurringTemplateAction::class, 'create']);
+        $app->get   ('/api/recurring-invoices/{id:[0-9]+}',        [RecurringTemplateAction::class, 'get']);
+        $app->put   ('/api/recurring-invoices/{id:[0-9]+}',        [RecurringTemplateAction::class, 'update']);
+        $app->delete('/api/recurring-invoices/{id:[0-9]+}',        [RecurringTemplateAction::class, 'delete']);
+        $app->post  ('/api/recurring-invoices/{id:[0-9]+}/pause',  [RecurringTemplateAction::class, 'pause']);
+        $app->post  ('/api/recurring-invoices/{id:[0-9]+}/resume', [RecurringTemplateAction::class, 'resume']);
+        $app->post  ('/api/recurring-invoices/{id:[0-9]+}/run-now',[RecurringTemplateAction::class, 'runNow']);
 
         // 404 fallback pro /api/*
         $app->any('/api/{path:.*}', function ($req, $res) {
