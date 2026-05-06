@@ -18,10 +18,13 @@ use Monolog\Logger;
 use MyInvoice\Bootstrap;
 use MyInvoice\Infrastructure\Config\Config;
 use MyInvoice\Infrastructure\Database\Connection;
+use MyInvoice\Repository\InvoiceRepository;
 use MyInvoice\Service\Bank\GpcParser;
 use MyInvoice\Service\Bank\StatementImporter;
 use MyInvoice\Service\Bank\StatementMatcher;
 use MyInvoice\Service\Bank\StatementScanner;
+use MyInvoice\Service\Invoice\FinalFromProformaCreator;
+use MyInvoice\Service\Invoice\InvoiceCalculator;
 
 $rootDir = Bootstrap::rootDir();
 $config  = Config::load($rootDir);
@@ -33,9 +36,12 @@ if ($scanRoot === '' || !is_dir($scanRoot)) {
     exit(0);
 }
 
-$parser   = new GpcParser();
-$matcher  = new StatementMatcher($conn);
-$importer = new StatementImporter($conn, $parser, $matcher);
+$parser       = new GpcParser();
+$invoiceRepo  = new InvoiceRepository($conn);
+$invoiceCalc  = new InvoiceCalculator($conn);
+$finalCreator = new FinalFromProformaCreator($conn, $invoiceRepo, $invoiceCalc);
+$matcher      = new StatementMatcher($conn, $finalCreator);
+$importer     = new StatementImporter($conn, $parser, $matcher);
 $scanner  = new StatementScanner($importer);
 
 $started = microtime(true);
