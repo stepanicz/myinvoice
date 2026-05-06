@@ -18,7 +18,9 @@ const auth = useAuthStore()
 const supplierStore = useSupplierStore()
 
 const mobileOpen = ref(false)
-const settingsOpen = ref(false)
+// CUSTOM (stepanicz): per-item dropdown state (jedna proměnná pro X dropdownů
+// — kdy víc top-level itemů má children, např. Faktury + Systém)
+const openMenu = ref<string | null>(null)
 const mobileSubOpen = ref<Record<string, boolean>>({})
 
 function toggleMobileSub(key: string) {
@@ -40,9 +42,17 @@ interface NavItem {
 const navItems = computed<NavItem[]>(() => {
   const items: NavItem[] = [
     { to: '/',         label: t('nav.dashboard'),  icon: 'M3 12l9-9 9 9M5 10v10h14V10' },
-    { to: '/invoices', label: t('nav.invoices'),   icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z' },
-    // CUSTOM (stepanicz): pravidelné faktury
-    { to: '/recurring', label: 'Pravidelné',       icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15' },
+    // CUSTOM (stepanicz): Faktury jako dropdown s podmenu Pravidelné
+    {
+      to: '/invoices', label: t('nav.invoices'),
+      icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
+      children: [
+        { to: '/invoices',  label: t('nav.invoices'),
+          icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z' },
+        { to: '/recurring', label: 'Pravidelné',
+          icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15' },
+      ],
+    },
     { to: '/clients',  label: t('nav.clients'),    icon: 'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a3 3 0 0 1 5.356-1.857M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z' },
     { to: '/projects', label: t('nav.projects'),   icon: 'M3 7l9-4 9 4-9 4-9-4zM3 12l9 4 9-4M3 17l9 4 9-4' },
     { to: '/bank',     label: t('nav.bank'),       icon: 'M3 9l9-7 9 7m-2 0v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9m4 11V13h4v7' },
@@ -70,17 +80,19 @@ const navItems = computed<NavItem[]>(() => {
 function isActive(to: string) {
   if (to === '/') return route.path === '/'
   if (to === '/admin') return route.path.startsWith('/admin')
+  // CUSTOM (stepanicz): /invoices parent v menu zvýrazňuj i na /recurring (podmenu)
+  if (to === '/invoices') return route.path.startsWith('/invoices') || route.path.startsWith('/recurring')
   return route.path.startsWith(to)
 }
 
 // Při změně route zavři mobile menu + dropdown
 watch(() => route.path, () => {
   mobileOpen.value = false
-  settingsOpen.value = false
+  openMenu.value = null
 })
 
 // Klik mimo dropdown ho zavře
-function onClickOutside() { settingsOpen.value = false }
+function onClickOutside() { openMenu.value = null }
 </script>
 
 <template>
@@ -113,7 +125,7 @@ function onClickOutside() { settingsOpen.value = false }
               </RouterLink>
               <!-- Top-level s dropdown -->
               <div v-else class="relative">
-                <button type="button" @click="settingsOpen = !settingsOpen"
+                <button type="button" @click="openMenu = openMenu === item.to ? null : item.to"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition cursor-pointer"
                   :class="isActive(item.to)
                     ? 'bg-primary-50 text-primary-700 font-medium'
@@ -122,7 +134,7 @@ function onClickOutside() { settingsOpen.value = false }
                     <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
                   </svg>
                   {{ item.label }}
-                  <svg class="w-3 h-3 ml-0.5 transition" :class="{ 'rotate-180': settingsOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg class="w-3 h-3 ml-0.5 transition" :class="{ 'rotate-180': openMenu === item.to }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -134,7 +146,7 @@ function onClickOutside() { settingsOpen.value = false }
                   leave-from-class="opacity-100 scale-100"
                   leave-to-class="opacity-0 scale-95"
                 >
-                  <div v-if="settingsOpen" class="absolute right-0 mt-1 w-52 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 z-40">
+                  <div v-if="openMenu === item.to" class="absolute right-0 mt-1 w-52 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 z-40">
                     <RouterLink v-for="child in item.children" :key="child.to" :to="child.to"
                       class="flex items-center gap-2 px-3 py-2 text-sm transition"
                       :class="isActive(child.to)
@@ -324,7 +336,7 @@ function onClickOutside() { settingsOpen.value = false }
 
     <!-- Klik mimo dropdown / mobile menu zavře -->
     <!-- Backdrop pro desktop dropdown — z-10 (pod headerem z-20), aby neblokoval dropdown items -->
-    <div v-if="settingsOpen" @click="onClickOutside" class="fixed inset-0 z-10 hidden md:block" aria-hidden="true"></div>
+    <div v-if="openMenu !== null" @click="onClickOutside" class="fixed inset-0 z-10 hidden md:block" aria-hidden="true"></div>
     <div v-if="mobileOpen" @click="mobileOpen = false" class="fixed inset-0 bg-neutral-900/20 z-10 min-[1120px]:hidden" aria-hidden="true"></div>
 
     <!-- Active supplier banner (jen když máme víc supplierů) -->
