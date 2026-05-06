@@ -1,0 +1,27 @@
+# MyInvoice — sidecar cron jobs (běží v kontejneru `cron` přes supercronic)
+# CUSTOM (stepanicz): není v upstreamu radekhulan/myinvoice
+#
+# Format: min hour day-of-month month day-of-week command
+# TZ: Europe/Prague (nastavené v docker-compose.yml přes env)
+# Logování: stdout/stderr → docker compose logs cron
+#           jednotlivé crony si dále zapisují do log/ podle své logiky
+#
+# Reload po editaci: docker compose restart cron
+#
+# Manuální spuštění libovolného cronu (pro test):
+#   docker compose exec cron php /var/www/html/api/bin/cron-XXX.php --dry-run
+
+# Údržba a zálohy
+0    2    *    *    *    php /var/www/html/api/bin/cron-cleanup.php
+0    3    *    *    *    php /var/www/html/api/bin/cron-backup.php
+30   3    *    *    *    php /var/www/html/api/bin/cron-backup-pdf.php
+
+# Pravidelné faktury (CUSTOM stepanicz)
+0    5    *    *    *    php /var/www/html/api/bin/cron-recurring-invoices.php
+
+# Bank scan každých 30 min (FIO export přijde kdykoliv během dne)
+*/30 *    *    *    *    php /var/www/html/api/bin/cron-bank-scan.php
+
+# Upomínky klientům (Po–Pá)
+0    9    *    *    1-5  php /var/www/html/api/bin/cron-send-reminders.php
+0    11   *    *    1-5  php /var/www/html/api/bin/cron-send-approval-reminders.php

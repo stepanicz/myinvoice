@@ -54,6 +54,28 @@ services:
       retries: 10
       start_period: 30s
 
+  # CUSTOM (stepanicz): in-container cron daemon — runs all scheduled jobs
+  # inside Docker (no host crontab / Task Scheduler needed). Uses same image
+  # as `app` (single build) but starts supercronic instead of apache.
+  # Crontab lives at /var/www/html/cmd/crontab (= cmd/crontab in repo).
+  cron:
+    image: myinvoice:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    user: www-data
+    command: ["supercronic", "/var/www/html/cmd/crontab"]
+    volumes:
+      - ./cfg.docker.php:/var/www/html/cfg.php:ro
+      - app-log:/var/www/html/log
+      - app-storage:/var/www/html/storage
+      - app-private:/var/www/html/private
+    environment:
+      TZ: Europe/Prague
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped

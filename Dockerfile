@@ -28,6 +28,17 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 COPY api/ ./
 RUN composer dump-autoload --optimize --classmap-authoritative
 
+# ---------- Stage 2b: supercronic (CUSTOM stepanicz) ----------
+# Lightweight Docker-friendly cron daemon. Used by sidecar `cron` service in
+# docker-compose.yml. Downloaded in alpine to avoid touching runtime apt-get.
+FROM alpine:3.20 AS cron-deps
+ARG TARGETARCH
+ARG SUPERCRONIC_VERSION=v0.2.33
+RUN apk add --no-cache curl ca-certificates \
+ && curl -fsSLo /usr/local/bin/supercronic \
+    "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-${TARGETARCH:-amd64}" \
+ && chmod +x /usr/local/bin/supercronic
+
 # ---------- Stage 3: runtime ----------
 FROM php:8.5-apache AS runtime
 
@@ -39,10 +50,13 @@ COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensio
 RUN install-php-extensions \
         pdo_mysql gd mbstring intl zip opcache exif bcmath redis \
  && apt-get update \
- && apt-get install -y --no-install-recommends tini \
+ && apt-get install -y --no-install-recommends \
+        tini \
+        default-mysql-client \
  && a2enmod rewrite headers deflate expires \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+# default-mysql-client (CUSTOM stepanicz): provides mariadb-dump used by cron-backup.php
 
 # PHP runtime config
 RUN { \
@@ -63,6 +77,9 @@ RUN sed -ri \
         -e 's!/var/www/html!/var/www/html!g' \
         -e 's!AllowOverride None!AllowOverride All!g' \
         /etc/apache2/apache2.conf /etc/apache2/sites-available/000-default.conf
+
+# CUSTOM (stepanicz): supercronic for in-container cron sidecar service
+COPY --from=cron-deps /usr/local/bin/supercronic /usr/local/bin/supercronic
 
 # Copy application code
 WORKDIR /var/www/html
