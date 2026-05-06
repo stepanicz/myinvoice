@@ -30,3 +30,7 @@ desktop.ini
 # IDE
 .idea/
 
+# Lokální branding overrides (mountují se přes originál v Docker containeru)
+custom/
+docker-compose.override.yml
+
