@@ -285,12 +285,12 @@ async function submit() {
         </div>
 
         <p class="text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded p-2">
-          💡 V popisu lze použít proměnné:
-          <code>{{ '{MMMM}' }}</code> = název měsíce,
-          <code>{{ '{YYYY}' }}</code> = rok,
-          <code>{{ '{period}' }}</code> = popis období,
-          <code>{{ '{prev:MMMM}' }}</code>, <code>{{ '{next:MMMM}' }}</code> = předchozí/další,
-          <code>{{ '{Q}' }}</code> = číslo čtvrtletí.
+          💡 V popisu lze použít proměnné (vyhodnotí se k datu vystavení faktury):<br>
+          <code>(MMMM)/(YYYY)</code> = např. <code>05/2026</code> ·
+          <code>(MMMM-1)/(YYYY)</code> = předchozí měsíc/rok s přechodem přes Nový rok (např. <code>12/2026</code> u faktury z 1.1.2027) ·
+          <code>(MMMM+1)/(YYYY)</code> = následující měsíc ·
+          <code>(YYYY-1)</code> = předchozí rok<br>
+          Alternativně curly placeholdery: <code>{{ '{MM}' }}</code>, <code>{{ '{YYYY}' }}</code>, <code>{{ '{prev:MM}' }}</code>, <code>{{ '{next:MM}' }}</code>, <code>{{ '{period}' }}</code>.
         </p>
 
         <table class="w-full text-sm">

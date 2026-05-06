@@ -127,6 +127,29 @@ final class RecurringRunner
     private function createDraftFromTemplate(array $tpl, string $issueDate, ?string $taxDate, string $dueDate, string $type, int $userId): int
     {
         $pdo = $this->db->pdo();
+
+        // Detekce neplátce DPH dodavatele — použijeme 0% rate u všech položek (jinak by se i v UI
+        // ukazovalo 21% u jednotlivých řádků, i když total_vat=0 z calculator override).
+        $supStmt = $pdo->prepare('SELECT is_vat_payer FROM supplier WHERE id = ?');
+        $supStmt->execute([(int) $tpl['supplier_id']]);
+        $isVatPayer = (bool) $supStmt->fetchColumn();
+
+        $zeroRateId = null;
+        $zeroRateSnap = null;
+        if (!$isVatPayer) {
+            $zStmt = $pdo->prepare(
+                'SELECT id, rate_percent FROM vat_rates
+                  WHERE rate_percent = 0 AND is_reverse_charge = 0
+                  ORDER BY id ASC LIMIT 1'
+            );
+            $zStmt->execute();
+            $zRow = $zStmt->fetch(\PDO::FETCH_ASSOC);
+            if ($zRow !== false) {
+                $zeroRateId = (int) $zRow['id'];
+                $zeroRateSnap = (float) $zRow['rate_percent'];
+            }
+        }
+
         $pdo->beginTransaction();
         try {
             $stmt = $pdo->prepare(
@@ -177,14 +200,17 @@ final class RecurringRunner
                     new \DateTimeImmutable($issueDate),
                     (string) ($tpl['language'] ?? 'cs'),
                 );
+                // Neplátce DPH → vynutit 0% rate (override šablony).
+                $vatRateId   = $zeroRateId   ?? $item['vat_rate_id'];
+                $vatRateSnap = $zeroRateSnap ?? $item['vat_rate_snapshot'];
                 $itemStmt->execute([
                     $newId,
                     $description,
                     $item['quantity'],
                     $item['unit'],
                     $item['unit_price_without_vat'],
-                    $item['vat_rate_id'],
-                    $item['vat_rate_snapshot'],
+                    $vatRateId,
+                    $vatRateSnap,
                     $item['order_index'],
                 ]);
             }

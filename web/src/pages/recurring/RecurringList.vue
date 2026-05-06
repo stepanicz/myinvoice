@@ -233,10 +233,10 @@ onMounted(load)
       <p class="font-medium mb-1">💡 Jak to funguje</p>
       <p>Cron běží 1× denně okolo 5:00 ráno. Pokud má šablona <code>příští vystavení ≤ dnes</code> a je aktivní, vytvoří se nová faktura podle šablony, vystaví se (přidělí varsymbol) a (pokud je auto-odeslání) odešle e-mailem klientovi. <code>Příští vystavení</code> se posune o jednu periodu.</p>
       <p class="mt-2"><strong>Proměnné v popiscích položek a poznámkách:</strong>
-        <code>{{ '{MMMM}' }}</code> = název měsíce ("květen"),
-        <code>{{ '{YYYY}' }}</code> = rok,
-        <code>{{ '{period}' }}</code> = popis období,
-        <code>{{ '{prev:MMMM}' }}</code>, <code>{{ '{next:MMMM}' }}</code> = předchozí/další období.
+        <code>(MMMM)/(YYYY)</code> = měsíc/rok faktury (<code>05/2026</code>),
+        <code>(MMMM-1)/(YYYY)</code> = předchozí měsíc/rok (s přechodem přes leden — <code>12/2026</code>),
+        <code>(YYYY-1)</code> = předchozí rok.
+        Pro pokročilé i curly syntaxe <code>{{ '{prev:MM}' }}</code>, <code>{{ '{period}' }}</code>.
       </p>
     </div>
   </div>

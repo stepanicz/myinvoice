@@ -31,14 +31,21 @@ final class InvoiceCalculator
     {
         $pdo = $this->db->pdo();
 
-        // Načti hlavičku (pro reverse_charge)
-        $stmt = $pdo->prepare('SELECT reverse_charge FROM invoices WHERE id = ?');
+        // Načti hlavičku + supplier.is_vat_payer
+        // CUSTOM (stepanicz): neplátce DPH = vynucené 0% rate (analogie reverse_charge).
+        // Bez tohoto se 21% vat_rate_snapshot z položek započítával i u neplátců.
+        $stmt = $pdo->prepare(
+            'SELECT i.reverse_charge, s.is_vat_payer
+               FROM invoices i
+               JOIN supplier s ON s.id = i.supplier_id
+              WHERE i.id = ?'
+        );
         $stmt->execute([$invoiceId]);
         $header = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$header) {
             throw new \RuntimeException("Invoice {$invoiceId} not found");
         }
-        $reverseCharge = (bool) $header['reverse_charge'];
+        $reverseCharge = (bool) $header['reverse_charge'] || !((bool) $header['is_vat_payer']);
 
         // Načti položky
         $stmt = $pdo->prepare(
