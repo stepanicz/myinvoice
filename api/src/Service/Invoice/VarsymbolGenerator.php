@@ -53,7 +53,11 @@ final class VarsymbolGenerator
         }
 
         $for = $for ?? new \DateTimeImmutable('today');
-        $period = $for->format('Ym'); // "202604"
+        // CUSTOM (stepanicz): scope counteru — měsíční pokud template obsahuje {MM}, jinak roční.
+        // Bez toho by template "{YYYY}{CCC}" v lednu 2027 vyrobil "2027001" duplikát s "2027001" z února.
+        $period = str_contains($template, '{MM}')
+            ? $for->format('Ym')   // "202604" — měsíční scope
+            : $for->format('Y');   // "2026"   — roční scope
 
         $next = $this->incrementCounter($supplierId, $invoiceType, $period);
 
@@ -73,7 +77,8 @@ final class VarsymbolGenerator
         if ($template === '') return '';
 
         $for = $for ?? new \DateTimeImmutable('today');
-        $period = $for->format('Ym');
+        // CUSTOM (stepanicz): viz next() — period scope dle přítomnosti {MM} v template.
+        $period = str_contains($template, '{MM}') ? $for->format('Ym') : $for->format('Y');
 
         $stmt = $this->db->pdo()->prepare(
             'SELECT last_number FROM invoice_counters WHERE supplier_id = ? AND invoice_type = ? AND period = ?'
