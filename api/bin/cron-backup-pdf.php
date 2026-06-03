@@ -10,7 +10,7 @@ declare(strict_types=1);
  * Vyžaduje PHP ext-zip.
  */
 
-if (PHP_SAPI !== 'cli') exit("CLI only.\n");
+if (PHP_SAPI !== 'cli' && !defined('CRON_HTTP_AUTHORIZED')) { http_response_code(403); exit("CLI only.\n"); }
 require __DIR__ . '/../vendor/autoload.php';
 
 use MyInvoice\Bootstrap;

@@ -18,6 +18,8 @@ manual/generated/
 manual/generated.bak/
 publish.cmd
 last_deploy.log
+_migration/
+_deploytest/
 
 # OS junk
 .DS_Store
@@ -34,3 +36,4 @@ desktop.ini
 custom/
 docker-compose.override.yml
 
+_deploy/

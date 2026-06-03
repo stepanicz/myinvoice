@@ -17,7 +17,7 @@ declare(strict_types=1);
  *   crontab: `0 5 * * * docker exec myinvoice-app-1 php /var/www/html/api/bin/cron-recurring-invoices.php >> /var/log/myinvoice-recurring.log 2>&1`
  */
 
-if (PHP_SAPI !== 'cli') exit("CLI only.\n");
+if (PHP_SAPI !== 'cli' && !defined('CRON_HTTP_AUTHORIZED')) { http_response_code(403); exit("CLI only.\n"); }
 require __DIR__ . '/../vendor/autoload.php';
 
 use MyInvoice\Bootstrap;

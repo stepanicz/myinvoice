@@ -11,7 +11,7 @@ declare(strict_types=1);
  * SHA256 dedupe — soubor co už byl naimportovaný se přeskočí.
  */
 
-if (PHP_SAPI !== 'cli') exit("CLI only.\n");
+if (PHP_SAPI !== 'cli' && !defined('CRON_HTTP_AUTHORIZED')) { http_response_code(403); exit("CLI only.\n"); }
 require __DIR__ . '/../vendor/autoload.php';
 
 use Monolog\Logger;

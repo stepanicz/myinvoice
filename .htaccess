@@ -10,7 +10,14 @@ Options -Indexes -MultiViews
     RewriteEngine On
 
     # 1) Force HTTPS
+    # POZN: za reverse proxy svethostingu se TLS terminuje na balanceru, takže
+    # mod_rewrite %{HTTPS} je vždy "off" (spojení Apache↔proxy je plain HTTP) i
+    # u HTTPS requestu — to dělalo nekonečnou redirect smyčku. Proxy ale nastaví
+    # SERVER_PORT=443 (a PHP $_SERVER['HTTPS']=on), takže přesměrováváme jen když
+    # SERVER_PORT není 443 a chybí forwarded-proto=https.
     RewriteCond %{HTTPS} off
+    RewriteCond %{SERVER_PORT} !=443
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https [NC]
     RewriteCond %{HTTP_HOST} !^localhost [NC]
     RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
