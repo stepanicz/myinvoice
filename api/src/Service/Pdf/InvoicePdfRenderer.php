@@ -84,6 +84,27 @@ final class InvoicePdfRenderer
             @mkdir($tmpDir, 0755, true);
         }
 
+        // Lato — Fakturoid font (mPDF ho v sobě nemá, registrujeme z styles/fonts/).
+        // Když chybí, fallback zpět na dejavusans — layout zůstává stejný, jen písmo.
+        $latoDir = $rootDir . '/styles/fonts';
+        $hasLato = is_file($latoDir . '/Lato-Regular.ttf')
+            && is_file($latoDir . '/Lato-Bold.ttf');
+        $defaultFontDirs = (new \Mpdf\Config\ConfigVariables())->getDefaults()['fontDir'];
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults()['fontdata'];
+        $fontConfig = $defaultFontConfig;
+        if ($hasLato) {
+            $fontConfig['lato'] = [
+                'R'  => 'Lato-Regular.ttf',
+                'B'  => 'Lato-Bold.ttf',
+                'I'  => 'Lato-Italic.ttf',
+                'BI' => 'Lato-BoldItalic.ttf',
+                // Lato TTF z Google Fonts neobsahuje OTL/GDEF tabulky.
+                // Explicitně vypneme OTL pro tento font (mPDF jinak zkusí použít a spadne).
+                'useOTL'     => 0,
+                'useKashida' => 0,
+            ];
+        }
+
         $mpdf = new Mpdf([
             'mode'              => 'utf-8',
             'format'            => 'A4',
@@ -92,7 +113,9 @@ final class InvoicePdfRenderer
             'margin_left'       => 15,
             'margin_right'      => 15,
             'tempDir'           => $tmpDir,
-            'default_font'      => 'dejavusans',
+            'fontDir'           => $hasLato ? array_merge($defaultFontDirs, [$latoDir]) : $defaultFontDirs,
+            'fontdata'          => $fontConfig,
+            'default_font'      => $hasLato ? 'lato' : 'dejavusans',
             'autoPageBreak'     => true,
         ]);
         // PDF metadata — bez Title/Author, aby Chrome viewer nezobrazoval text nad PDF.
