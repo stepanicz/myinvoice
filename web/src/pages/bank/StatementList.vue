@@ -122,7 +122,14 @@ async function onFileSelected(e: Event) {
               </span>
               {{ s.file_name }}
             </td>
-            <td class="px-3 py-2 text-right font-mono text-xs">{{ formatMoney(s.curr_balance, 'CZK') }}</td>
+            <td class="px-3 py-2 text-right font-mono text-xs">
+              <template v-if="s.source === 'email'">
+                <span :class="(s.tx_amount_sum ?? 0) >= 0 ? 'text-success-600' : 'text-danger-500'">
+                  {{ s.tx_amount_sum !== null ? formatMoney(s.tx_amount_sum, 'CZK') : '—' }}
+                </span>
+              </template>
+              <template v-else>{{ formatMoney(s.curr_balance, 'CZK') }}</template>
+            </td>
             <td class="px-3 py-2 text-center">{{ s.transaction_count }}</td>
             <td class="px-3 py-2 text-center">
               <span class="text-xs px-2 py-0.5 rounded font-medium"
@@ -144,7 +151,14 @@ async function onFileSelected(e: Event) {
             <div class="font-medium text-neutral-900">
               {{ formatDate(s.statement_date) }}<span v-if="s.statement_number" class="text-neutral-400 ml-1">#{{ s.statement_number }}</span>
             </div>
-            <div class="font-mono text-sm font-semibold whitespace-nowrap">{{ formatMoney(s.curr_balance, 'CZK') }}</div>
+            <div class="font-mono text-sm font-semibold whitespace-nowrap">
+            <template v-if="s.source === 'email'">
+              <span :class="(s.tx_amount_sum ?? 0) >= 0 ? 'text-success-600' : 'text-danger-500'">
+                {{ s.tx_amount_sum !== null ? formatMoney(s.tx_amount_sum, 'CZK') : '—' }}
+              </span>
+            </template>
+            <template v-else>{{ formatMoney(s.curr_balance, 'CZK') }}</template>
+          </div>
           </div>
           <div class="font-mono text-xs text-neutral-500 mt-0.5">{{ s.account_number }}</div>
           <div class="text-xs text-neutral-500 truncate mt-0.5">

@@ -62,14 +62,14 @@ final class CsasParserTest extends TestCase
         self::assertSame('2026-05-06 10:28:14', $tx->postedAt->format('Y-m-d H:i:s'));
     }
 
-    public function testThrowsWhenVariableSymbolMissing(): void
+    public function testParsesWithoutVariableSymbolAsNull(): void
     {
         $html = '<div>na účet 7055602369/0800 právě dorazila platba ve výši 2&nbsp;500,00 Kč.</div>'
               . '<div>Číslo účtu: 7055602369/0800</div>'
               . '<div>Částka v měně účtu: 2&nbsp;500,00 Kč</div>';
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessageMatches('/Variabilní symbol/');
-        (new CsasParser())->parse($this->makeMessage($html));
+        $tx = (new CsasParser())->parse($this->makeMessage($html));
+        self::assertNull($tx->variableSymbol);
+        self::assertSame('2500.00', $tx->amount);
     }
 
     public function testThrowsWhenAmountMissing(): void

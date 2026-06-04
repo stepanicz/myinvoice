@@ -93,11 +93,11 @@ final class CsasParser implements BankParserInterface
             $amount = '-' . $amount;
         }
 
-        // VS (Variabilní symbol je povinný pro matching faktury)
-        if (!preg_match('/Variabilní symbol:\s*(\d+)/u', $text, $m)) {
-            throw new \RuntimeException('CSAS: chybí Variabilní symbol — nelze párovat na fakturu.');
+        // VS — volitelný; bez VS se transakce uloží jako nepárovaná (ruční párování v UI).
+        $variableSymbol = null;
+        if (preg_match('/Variabilní symbol:\s*(\d+)/u', $text, $m)) {
+            $variableSymbol = $m[1];
         }
-        $variableSymbol = $m[1];
 
         $constantSymbol = null;
         if (preg_match('/Konstantní symbol:\s*(\d+)/u', $text, $m)) {

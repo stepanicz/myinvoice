@@ -14,7 +14,7 @@ declare(strict_types=1);
  *   docker compose exec cron php /var/www/html/api/bin/cron-mail-scan.php
  */
 
-if (PHP_SAPI !== 'cli') exit("CLI only.\n");
+if (PHP_SAPI !== 'cli' && !defined('CRON_HTTP_AUTHORIZED')) { http_response_code(403); exit("CLI only.\n"); }
 require __DIR__ . '/../vendor/autoload.php';
 
 use MyInvoice\Bootstrap;
@@ -26,6 +26,7 @@ use MyInvoice\Service\Invoice\FinalFromProformaCreator;
 use MyInvoice\Service\Invoice\InvoiceCalculator;
 use MyInvoice\Service\PaymentMail\ImapClient;
 use MyInvoice\Service\PaymentMail\Parser\CsasParser;
+use MyInvoice\Service\PaymentMail\Parser\FioParser;
 use MyInvoice\Service\PaymentMail\PaymentMailIngestor;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
@@ -52,7 +53,8 @@ $invoiceCalc   = new InvoiceCalculator($conn);
 $finalCreator  = new FinalFromProformaCreator($conn, $invoiceRepo, $invoiceCalc);
 $matcher       = new StatementMatcher($conn, $finalCreator);
 $csasParser    = new CsasParser();
-$ingestor      = new PaymentMailIngestor($config, $conn, $imap, $matcher, $logger, $csasParser);
+$fioParser     = new FioParser();
+$ingestor      = new PaymentMailIngestor($config, $conn, $imap, $matcher, $logger, $csasParser, $fioParser);
 
 $started = microtime(true);
 try {

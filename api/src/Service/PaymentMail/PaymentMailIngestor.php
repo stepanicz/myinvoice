@@ -9,6 +9,7 @@ use MyInvoice\Infrastructure\Database\Connection;
 use MyInvoice\Service\Bank\StatementMatcher;
 use MyInvoice\Service\PaymentMail\Parser\BankParserInterface;
 use MyInvoice\Service\PaymentMail\Parser\CsasParser;
+use MyInvoice\Service\PaymentMail\Parser\FioParser;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -34,10 +35,10 @@ final class PaymentMailIngestor
         private readonly ImapClient $imap,
         private readonly StatementMatcher $matcher,
         private readonly LoggerInterface $logger,
-        // Konkrétní parsery — autowire přes PHP-DI; pro Fio přidat až bude šablona.
         CsasParser $csas,
+        FioParser  $fio,
     ) {
-        $this->parsers = [$csas];
+        $this->parsers = [$csas, $fio];
     }
 
     /**

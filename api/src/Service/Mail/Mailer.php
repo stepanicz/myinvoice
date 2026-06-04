@@ -70,7 +70,8 @@ final class Mailer
         if ($dbTpl !== null) {
             // DB šablona je editovatelná adminem — sandboxujeme proti SSTI
             $sandbox = $this->sandboxedTwig();
-            $vars['subject'] = $subjectOverride ?? $dbTpl['subject'];
+            $rawSubject = $subjectOverride ?? $dbTpl['subject'];
+            $vars['subject'] = $sandbox->createTemplate($rawSubject)->render($vars);
             $html = $sandbox->createTemplate($dbTpl['body_html'])->render($vars);
             $text = $sandbox->createTemplate($dbTpl['body_text'])->render($vars);
         } else {
@@ -82,6 +83,12 @@ final class Mailer
             }
             if (!isset($vars['subject'])) {
                 $vars['subject'] = $subjectOverride ?? $this->defaultSubject($code, $locale);
+            }
+            // Subject z defaultSubject() i subject_override z API může obsahovat Twig syntax
+            // (např. "Faktura {{ invoice.varsymbol }} — {{ supplier.display_name }}").
+            $rawSubject = (string) $vars['subject'];
+            if (str_contains($rawSubject, '{{') || str_contains($rawSubject, '{%')) {
+                $vars['subject'] = $this->sandboxedTwig()->createTemplate($rawSubject)->render($vars);
             }
             $html = $twig->render($htmlTemplate, $vars);
             $text = $twig->render($textTemplate, $vars);
@@ -211,7 +218,7 @@ final class Mailer
     private function sandboxedTwig(): Environment
     {
         if ($this->sandboxTwig === null) {
-            $allowedTags = ['if', 'for', 'set', 'spaceless'];
+            $allowedTags = ['if', 'for', 'set', 'spaceless', 'extends', 'block', 'include', 'apply', 'verbatim'];
             $allowedFilters = [
                 'escape', 'e', 'raw', 'default', 'date', 'number_format',
                 'upper', 'lower', 'capitalize', 'title', 'trim', 'replace',

@@ -155,7 +155,8 @@ final class BankStatementAction
         $sid = SupplierGuard::currentId($request);
         $stmt = $this->db->pdo()->prepare(
             "SELECT bs.id, bs.file_name, bs.source, bs.account_number, bs.statement_date, bs.statement_number,
-                    bs.prev_balance, bs.curr_balance, bs.transaction_count, bs.matched_count, bs.imported_at
+                    bs.prev_balance, bs.curr_balance, bs.transaction_count, bs.matched_count, bs.imported_at,
+                    (SELECT SUM(bt.amount) FROM bank_transactions bt WHERE bt.statement_id = bs.id) AS tx_amount_sum
                FROM bank_statements bs
               WHERE EXISTS (
                   SELECT 1 FROM currencies cur
@@ -173,8 +174,9 @@ final class BankStatementAction
             $r['id'] = (int) $r['id'];
             $r['transaction_count'] = (int) $r['transaction_count'];
             $r['matched_count'] = (int) $r['matched_count'];
-            $r['prev_balance'] = (float) $r['prev_balance'];
-            $r['curr_balance'] = (float) $r['curr_balance'];
+            $r['prev_balance']    = (float) $r['prev_balance'];
+            $r['curr_balance']    = $r['curr_balance'] !== null ? (float) $r['curr_balance'] : null;
+            $r['tx_amount_sum']   = $r['tx_amount_sum'] !== null ? (float) $r['tx_amount_sum'] : null;
         }
         return Json::ok($response, $rows);
     }

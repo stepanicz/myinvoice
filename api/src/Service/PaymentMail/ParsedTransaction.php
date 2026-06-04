@@ -21,8 +21,8 @@ final class ParsedTransaction
         public readonly string $counterpartyAccount,
         /** Kód banky protistrany (4 číslice) nebo null. */
         public readonly ?string $counterpartyBankCode,
-        /** Variabilní symbol (text, jen čísla) — klíč pro matching na fakturu. */
-        public readonly string $variableSymbol,
+        /** Variabilní symbol (text, jen čísla) — klíč pro matching na fakturu. Null = klient neuvedl VS, transakce se uloží bez párování. */
+        public readonly ?string $variableSymbol,
         /** Konstantní symbol nebo null. */
         public readonly ?string $constantSymbol,
         /** Specifický symbol nebo null. */

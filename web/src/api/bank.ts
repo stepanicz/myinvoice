@@ -10,7 +10,8 @@ export interface BankStatement {
   statement_date: string
   statement_number: string | null
   prev_balance: number
-  curr_balance: number
+  curr_balance: number | null
+  tx_amount_sum: number | null
   transaction_count: number
   matched_count: number
   imported_at: string
