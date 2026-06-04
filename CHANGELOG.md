@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Faktura PDF — čistý „Fakturoid" vzhled jako výchozí (nasazeno na produkci
+  2026-06-04).** Čistý design (šedé akcenty, font Lato, bez fialové) dosud žil
+  jen v gitignored `custom/` a aplikoval se výhradně přes
+  `docker-compose.override.yml` — proto fungoval lokálně na Dockeru, ale nikdy
+  se nedostal do deploye a produkce renderovala fialovou výchozí šablonu. Nyní
+  je `styles/invoice.css` + `api/templates/invoice/invoice.twig` povýšen na
+  commitnutý default a registrace fontu **Lato** (z `styles/fonts/`, fallback
+  DejaVu Sans) přidána přímo do `InvoicePdfRenderer` — při zachování archivace
+  PDF (`PdfArchiveService`) i draft-guardu snapshotů, které custom renderer
+  neměl.
+
+### Added
+
+- **ISDOC příloha v PDF faktury.** `InvoicePdfRenderer` embeduje ISDOC 6.0.2 XML
+  jako přílohu PDF (PDF/A-3 associated file) pro daňové doklady (`invoice`,
+  `credit_note`) — příjemce může extrahovat `.isdoc` pro automatický import do
+  účetnictví. Závislost `IsdocExporter` přes autowiring; selhání generování
+  ISDOC render PDF nerozbije (zaloguje a pokračuje).
+
 ## [1.9.1] — 2026-05-05
 
 ### Fixed
