@@ -10,6 +10,7 @@ use MyInvoice\Infrastructure\Config\Config;
 use MyInvoice\Infrastructure\Database\Connection;
 use MyInvoice\Repository\InvoiceRepository;
 use MyInvoice\Repository\WorkReportRepository;
+use MyInvoice\Service\Export\IsdocExporter;
 use MyInvoice\Service\Invoice\SnapshotBuilder;
 use MyInvoice\Service\Qr\QrPaymentGenerator;
 use Twig\Environment;
@@ -36,6 +37,7 @@ final class InvoicePdfRenderer
         private readonly WorkReportRepository $workReports,
         private readonly SnapshotBuilder $snapshots,
         private readonly PdfArchiveService $archive,
+        private readonly IsdocExporter $isdoc,
     ) {}
 
     /**
@@ -128,6 +130,26 @@ final class InvoicePdfRenderer
             $mpdf->WriteHTML($rendered['css'], \Mpdf\HTMLParserMode::HEADER_CSS);
         }
         $mpdf->WriteHTML($rendered['body'], \Mpdf\HTMLParserMode::HTML_BODY);
+
+        // Embed ISDOC XML do PDF (PDF/A-3 style associated file).
+        // Recipient může extrahovat .isdoc pro automatický import do účetnictví.
+        // Pouze pro daňové doklady (ne proforma — ta není daňový doklad).
+        if (in_array($invoice['invoice_type'], ['invoice', 'credit_note'], true)) {
+            try {
+                $isdocXml = $this->isdoc->buildXml($invoice);
+                $vs = $invoice['varsymbol'] ?? ('draft-' . $invoice['id']);
+                $mpdf->SetAssociatedFiles([[
+                    'content'        => $isdocXml,
+                    'name'           => "Faktura-{$vs}.isdoc",
+                    'mime'           => 'application/xml',
+                    'description'    => 'ISDOC 6.0.2 elektronická faktura',
+                    'AFRelationship' => 'Source',
+                ]]);
+            } catch (\Throwable $e) {
+                // ISDOC selhání nesmí rozbít render PDF — zaloguj a pokračuj.
+                error_log('ISDOC embed failed for invoice ' . $invoice['id'] . ': ' . $e->getMessage());
+            }
+        }
 
         if (!is_dir(dirname($cachedPath))) {
             @mkdir(dirname($cachedPath), 0755, true);
